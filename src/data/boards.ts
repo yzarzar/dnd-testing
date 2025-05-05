@@ -79,4 +79,25 @@ export async function createBoard(name: string, description: string): Promise<Bo
     console.error('Error creating board:', error);
     return null;
   }
+}
+
+export async function updateColumnPosition(columnId: number, position: number): Promise<boolean> {
+  try {
+    const response = await fetch(`http://localhost:8000/api/columns/${columnId}/move`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ position }),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to update column position`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating column position:', error);
+    return false;
+  }
 } 
