@@ -20,7 +20,7 @@ import {
 } from '@dnd-kit/sortable';
 import Column from './Column';
 import TaskCard from './TaskCard';
-import { fetchBoardDetails, BoardDetails, Column as ColumnType, Task as TaskType, updateColumnPosition } from '../data/boards';
+import { fetchBoardDetails, BoardDetails, Column as ColumnType, Task as TaskType, updateColumnPosition, updateTaskPosition } from '../data/boards';
 
 interface ToastMessage {
   id: string;
@@ -40,7 +40,9 @@ export default function KanbanBoard(): React.ReactElement {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingColumnId, setUpdatingColumnId] = useState<number | null>(null);
+  const [updatingTaskId, setUpdatingTaskId] = useState<number | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -55,6 +57,12 @@ export default function KanbanBoard(): React.ReactElement {
 
   // Function to simulate API delay
   const simulateApiDelay = (ms: number = 1000) => new Promise(resolve => setTimeout(resolve, ms));
+  
+  // Function to refresh board data
+  const refreshBoard = () => {
+    console.log('Refreshing board data');
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   useEffect(() => {
     async function loadBoardDetails() {
@@ -65,9 +73,11 @@ export default function KanbanBoard(): React.ReactElement {
       
       try {
         const numericBoardId = parseInt(boardId);
+        console.log('Loading board details for boardId:', numericBoardId);
         const data = await fetchBoardDetails(numericBoardId);
         
         if (data) {
+          console.log('Board details loaded successfully:', data);
           setBoardDetails(data);
           // Sort columns by position (starting from 0)
           setColumns(data.columns.sort((a, b) => a.position - b.position));
@@ -93,18 +103,34 @@ export default function KanbanBoard(): React.ReactElement {
     }
 
     loadBoardDetails();
-  }, [boardId]);
+  }, [boardId, refreshTrigger]);
 
   function findContainer(id: string | number): number | null {
+    console.log('findContainer called with id:', id);
+    
     // Convert id to number if it's a string (for consistent comparison)
     const numericId = typeof id === 'string' ? parseInt(id) : id;
     
+    // If the id starts with "column-", this is a column id
+    if (typeof id === 'string' && id.startsWith('column-')) {
+      const columnId = parseInt(id.replace('column-', ''));
+      console.log('Found column container:', columnId);
+      return columnId;
+    }
+    
+    // Otherwise it's a task id
     const task = tasks.find(task => task.id === numericId);
-    if (task) return task.column_id;
+    if (task) {
+      console.log('Found task container:', task.column_id);
+      return task.column_id;
+    }
+    
+    console.log('No container found for id:', id);
     return null;
   }
 
   function handleDragStart(event: DragStartEvent): void {
+    console.log('Drag started:', event);
     const { active } = event;
     setActiveId(active.id);
     
@@ -150,6 +176,8 @@ export default function KanbanBoard(): React.ReactElement {
       activeContainer !== overContainer &&
       columns.some(col => col.id === overContainer)
     ) {
+      // Only update the visual representation in drag over
+      // The actual API call will be made in handleDragEnd
       setTasks(prevTasks => {
         const activeIndex = prevTasks.findIndex(t => t.id === numericActiveId);
         if (activeIndex === -1) return prevTasks;
@@ -164,9 +192,11 @@ export default function KanbanBoard(): React.ReactElement {
   }
 
   function handleDragEnd(event: DragEndEvent): void {
+    console.log('Drag ended:', event);
     const { active, over } = event;
     
     if (!over) {
+      console.log('No over target found');
       setActiveId(null);
       setActiveItem(null);
       return;
@@ -174,10 +204,40 @@ export default function KanbanBoard(): React.ReactElement {
     
     const activeId = active.id;
     const overId = over.id;
+    console.log('Drag end details:', { activeId, overId });
+    
+    // Test direct API call
+    if (typeof activeId === 'string' || typeof activeId === 'number') {
+      const taskId = typeof activeId === 'string' ? parseInt(activeId) : activeId;
+      console.log('Testing direct API call for task:', taskId);
+      
+      // Make a direct test call to the API using fetch
+      fetch(`http://localhost:8000/api/tasks/2/move`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          column_id: 4,
+          position: 0 
+        }),
+      })
+      .then(response => {
+        console.log('Direct API test response:', response.status);
+        return response.text();
+      })
+      .then(text => {
+        console.log('Direct API test response text:', text);
+      })
+      .catch(error => {
+        console.error('Direct API test error:', error);
+      });
+    }
     
     // Handle column reordering
     if (typeof activeId === 'string' && activeId.startsWith('column-') &&
         typeof overId === 'string' && overId.startsWith('column-')) {
+      console.log('Column reordering detected');
       
       const activeColumnId = parseInt(activeId.replace('column-', ''));
       const overColumnId = parseInt(overId.replace('column-', ''));
@@ -222,28 +282,106 @@ export default function KanbanBoard(): React.ReactElement {
         }
       }
     } else {
-      // Handle task reordering (existing logic)
+      console.log('Task reordering detected');
+      // Handle task reordering
       const numericActiveId = typeof activeId === 'string' ? parseInt(activeId) : activeId;
       const numericOverId = typeof overId === 'string' ? parseInt(overId) : overId;
       
       const activeContainer = findContainer(activeId);
-      const overContainer = findContainer(overId);
+      const overContainer = typeof overId === 'number' 
+        ? overId 
+        : findContainer(overId);
       
-      if (numericActiveId !== numericOverId) {
-        setTasks(prevTasks => {
-          const activeIndex = prevTasks.findIndex(t => t.id === numericActiveId);
-          const overIndex = prevTasks.findIndex(t => t.id === numericOverId);
+      console.log('Task containers:', { activeContainer, overContainer });
+      
+      // Always update the task position, even when dropping in the same place
+      // This ensures the backend gets the correct position information
+      setTasks(prevTasks => {
+        const activeIndex = prevTasks.findIndex(t => t.id === numericActiveId);
+        
+        if (activeIndex === -1) return prevTasks;
+        
+        let newTasks = [...prevTasks];
+        const updatedTask = { ...newTasks[activeIndex], column_id: overContainer as number };
+        
+        // Remove the task from its current position
+        newTasks.splice(activeIndex, 1);
+        
+        // Find the index where we should insert the task
+        let insertIndex;
+        if (activeContainer === overContainer) {
+          // If in the same column, find the index of the task we're dropping onto
+          const overIndex = newTasks.findIndex(t => t.id === numericOverId);
+          insertIndex = overIndex === -1 ? newTasks.length : overIndex;
+        } else {
+          // If moving to a different column, find the right position in that column
+          const tasksInTargetColumn = newTasks.filter(t => t.column_id === overContainer);
           
-          if (activeIndex === -1 || overIndex === -1) return prevTasks;
-          
-          if (activeContainer === overContainer) {
-            return arrayMove(prevTasks, activeIndex, overIndex);
+          if (tasksInTargetColumn.length === 0) {
+            // If the column is empty, insert at the end of all tasks
+            insertIndex = newTasks.length;
+          } else if (numericOverId === overContainer) {
+            // If dropped directly on the column (not on a task), insert at the beginning of that column
+            const firstTaskInColumnIndex = newTasks.findIndex(t => t.column_id === overContainer);
+            insertIndex = firstTaskInColumnIndex === -1 ? newTasks.length : firstTaskInColumnIndex;
+          } else {
+            // If dropped on a task in another column, insert at that position
+            const overIndex = newTasks.findIndex(t => t.id === numericOverId);
+            insertIndex = overIndex === -1 ? newTasks.length : overIndex;
           }
-          
-          // If dropped in different container, the position is already updated in handleDragOver
-          return prevTasks;
+        }
+        
+        // Insert the task at the new position
+        newTasks.splice(insertIndex, 0, updatedTask);
+        
+        // Update positions for all tasks in the affected column(s)
+        const finalTasks = newTasks.map((task, index) => ({
+          ...task,
+          position: index
+        }));
+        
+        // Calculate the task's position within its column
+        const tasksInSameColumn = finalTasks.filter(t => t.column_id === overContainer);
+        const positionInColumn = tasksInSameColumn.findIndex(t => t.id === numericActiveId);
+        
+        console.log('New task position in column:', {
+          taskId: numericActiveId,
+          columnId: overContainer,
+          position: positionInColumn
         });
-      }
+        
+        // Use setTimeout to ensure the API call happens after state update
+        setTimeout(() => {
+          console.log('About to call updateTaskPosition with:', {
+            taskId: numericActiveId,
+            columnId: overContainer,
+            position: positionInColumn
+          });
+          
+          // Set the updating task
+          setUpdatingTaskId(numericActiveId);
+          
+          updateTaskPosition(
+            numericActiveId, 
+            overContainer as number, 
+            positionInColumn
+          )
+          .then(success => {
+            console.log('Task position update result:', success);
+            // Clear the updating task ID after a short delay
+            setTimeout(() => {
+              setUpdatingTaskId(null);
+              // No need to refresh the entire board
+            }, 300);
+          })
+          .catch(error => {
+            console.error('Failed to update task position:', error);
+            setUpdatingTaskId(null);
+          });
+        }, 100);
+        
+        return finalTasks;
+      });
     }
     
     setActiveId(null);
@@ -300,6 +438,7 @@ export default function KanbanBoard(): React.ReactElement {
                   column={column}
                   tasks={tasks.filter(task => task.column_id === column.id)}
                   isUpdating={updatingColumnId === column.id}
+                  updatingTaskId={updatingTaskId}
                 />
               ))}
             </div>
@@ -309,13 +448,18 @@ export default function KanbanBoard(): React.ReactElement {
         <DragOverlay>
           {activeItem && activeItem.type === 'task' ? (
             <div className="transform scale-105">
-              <TaskCard task={activeItem.data} />
+              <TaskCard 
+                task={activeItem.data} 
+                isUpdating={updatingTaskId === activeItem.data.id}
+              />
             </div>
           ) : activeItem && activeItem.type === 'column' ? (
             <div className="transform scale-105 opacity-80">
               <Column
                 column={activeItem.data}
                 tasks={tasks.filter(task => task.column_id === activeItem.data.id)}
+                isUpdating={updatingColumnId === activeItem.data.id}
+                updatingTaskId={updatingTaskId}
               />
             </div>
           ) : null}

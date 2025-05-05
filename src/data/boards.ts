@@ -100,4 +100,47 @@ export async function updateColumnPosition(columnId: number, position: number): 
     console.error('Error updating column position:', error);
     return false;
   }
+}
+
+export async function updateTaskPosition(taskId: number, columnId: number, position: number): Promise<boolean> {
+  console.log('Calling updateTaskPosition API:', { taskId, columnId, position });
+  
+  const url = `http://localhost:8000/api/tasks/${taskId}/move`;
+  const requestBody = { 
+    column_id: columnId,
+    position: position 
+  };
+  
+  console.log('Request details:', {
+    url,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody)
+  });
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+    
+    console.log('API response status:', response.status);
+    
+    const responseData = await response.text();
+    console.log('API response data:', responseData);
+    
+    if (!response.ok) {
+      console.error('API error response:', responseData);
+      throw new Error(`Failed to update task position: ${responseData}`);
+    }
+    
+    console.log('Task position updated successfully');
+    return true;
+  } catch (error) {
+    console.error('Error updating task position:', error);
+    return false;
+  }
 } 

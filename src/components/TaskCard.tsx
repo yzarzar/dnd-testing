@@ -5,9 +5,10 @@ import { Task } from '../data/boards';
 
 interface TaskCardProps {
   task: Task;
+  isUpdating?: boolean;
 }
 
-export default function TaskCard({ task }: TaskCardProps) {
+export default function TaskCard({ task, isUpdating = false }: TaskCardProps) {
   const {
     attributes,
     listeners,
@@ -47,8 +48,13 @@ export default function TaskCard({ task }: TaskCardProps) {
       style={style}
       {...attributes}
       {...listeners}
-      className="bg-white p-4 mb-3 rounded-lg shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-all duration-200 hover:translate-y-[-2px]"
+      className={`bg-white p-4 mb-3 rounded-lg shadow-sm border relative ${isUpdating ? 'border-blue-300 ring-1 ring-blue-300' : 'border-gray-100'} cursor-pointer hover:shadow-md transition-all duration-200 hover:translate-y-[-2px]`}
     >
+      {isUpdating && (
+        <div className="absolute inset-0 bg-white bg-opacity-60 flex items-center justify-center rounded-lg z-10">
+          <div className="h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
       <div className="flex flex-col gap-2">
         <h3 className="font-medium text-gray-800">{task.title}</h3>
         <p className="text-sm text-gray-500">{task.description}</p>

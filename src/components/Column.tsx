@@ -26,9 +26,10 @@ interface ColumnProps {
   column: ColumnType;
   tasks: Task[];
   isUpdating?: boolean;
+  updatingTaskId?: number | null;
 }
 
-export default function Column({ column, tasks, isUpdating = false }: ColumnProps) {
+export default function Column({ column, tasks, isUpdating = false, updatingTaskId = null }: ColumnProps) {
   // Set up sortable for the column
   const {
     attributes,
@@ -114,7 +115,11 @@ export default function Column({ column, tasks, isUpdating = false }: ColumnProp
           )}
           <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
             {tasks.map(task => (
-              <TaskCard key={task.id} task={task} />
+              <TaskCard 
+                key={task.id} 
+                task={task} 
+                isUpdating={updatingTaskId === task.id}
+              />
             ))}
             {tasks.length === 0 && (
               <div className="text-center py-8 text-gray-400 text-sm">
