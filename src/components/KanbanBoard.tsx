@@ -312,7 +312,23 @@ export default function KanbanBoard(): React.ReactElement {
         if (activeContainer === overContainer) {
           // If in the same column, find the index of the task we're dropping onto
           const overIndex = newTasks.findIndex(t => t.id === numericOverId);
-          insertIndex = overIndex === -1 ? newTasks.length : overIndex;
+          
+          if (overIndex === -1) {
+            insertIndex = newTasks.length;
+          } else {
+            // If dragging downward within the same column, we need to insert after the target
+            // to account for the shift that happened when removing the item
+            const originalActiveIndex = prevTasks.findIndex(t => t.id === numericActiveId);
+            const originalOverIndex = prevTasks.findIndex(t => t.id === numericOverId);
+            
+            if (originalActiveIndex < originalOverIndex) {
+              // When dragging downward, insert after the target
+              insertIndex = overIndex + 1;
+            } else {
+              // When dragging upward or onto itself, insert at the target position
+              insertIndex = overIndex;
+            }
+          }
         } else {
           // If moving to a different column, find the right position in that column
           const tasksInTargetColumn = newTasks.filter(t => t.column_id === overContainer);
