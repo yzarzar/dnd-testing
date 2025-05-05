@@ -2,7 +2,7 @@ import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import TaskCard from './TaskCard';
-import { Column as ColumnType, Task } from '../data/tasks';
+import { Column as ColumnType, Task } from '../data/boards';
 
 interface ColumnProps {
   column: ColumnType;
@@ -14,7 +14,8 @@ export default function Column({ column, tasks }: ColumnProps) {
     id: column.id,
   });
 
-  const taskIds = tasks.map(task => task.id);
+  // Convert task ids to strings for SortableContext
+  const taskIds = tasks.map(task => task.id.toString());
 
   return (
     <div className="flex flex-col w-full min-w-[300px] max-w-[350px] h-full bg-white rounded-lg shadow-sm border border-gray-100">

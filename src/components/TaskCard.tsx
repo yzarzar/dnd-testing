@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Task } from '../data/tasks';
+import { Task } from '../data/boards';
 
 interface TaskCardProps {
   task: Task;
@@ -15,7 +15,7 @@ export default function TaskCard({ task }: TaskCardProps) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: task.id });
+  } = useSortable({ id: task.id.toString() });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -24,15 +24,21 @@ export default function TaskCard({ task }: TaskCardProps) {
   };
 
   const tagColorMap: Record<string, string> = {
-    'Research': 'bg-blue-50 text-blue-600 border border-blue-200',
-    'Planning': 'bg-purple-50 text-purple-600 border border-purple-200',
-    'Design': 'bg-pink-50 text-pink-600 border border-pink-200',
-    'DevOps': 'bg-gray-50 text-gray-600 border border-gray-200',
-    'Backend': 'bg-green-50 text-green-600 border border-green-200',
-    'Frontend': 'bg-amber-50 text-amber-600 border border-amber-200',
-    'Setup': 'bg-indigo-50 text-indigo-600 border border-indigo-200',
-    'UX': 'bg-rose-50 text-rose-600 border border-rose-200',
-    'Database': 'bg-cyan-50 text-cyan-600 border border-cyan-200',
+    'planning': 'bg-purple-50 text-purple-600 border border-purple-200',
+    'backend': 'bg-green-50 text-green-600 border border-green-200',
+    'frontend': 'bg-amber-50 text-amber-600 border border-amber-200',
+    'research': 'bg-blue-50 text-blue-600 border border-blue-200',
+    'design': 'bg-pink-50 text-pink-600 border border-pink-200',
+    'devops': 'bg-gray-50 text-gray-600 border border-gray-200',
+    'setup': 'bg-indigo-50 text-indigo-600 border border-indigo-200',
+    'ux': 'bg-rose-50 text-rose-600 border border-rose-200',
+    'database': 'bg-cyan-50 text-cyan-600 border border-cyan-200',
+  };
+
+  const priorityColorMap: Record<string, string> = {
+    'high': 'text-red-600',
+    'medium': 'text-yellow-600',
+    'low': 'text-green-600',
   };
 
   return (
@@ -46,10 +52,23 @@ export default function TaskCard({ task }: TaskCardProps) {
       <div className="flex flex-col gap-2">
         <h3 className="font-medium text-gray-800">{task.title}</h3>
         <p className="text-sm text-gray-500">{task.description}</p>
-        <div className="mt-1">
-          <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${tagColorMap[task.tag] || 'bg-gray-50 text-gray-600 border border-gray-200'}`}>
+        <div className="flex items-center justify-between mt-3">
+          <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${tagColorMap[task.tag.toLowerCase()] || 'bg-gray-50 text-gray-600 border border-gray-200'}`}>
             {task.tag}
           </span>
+          {task.priority && (
+            <span className={`text-xs font-medium ${priorityColorMap[task.priority] || 'text-gray-500'}`}>
+              {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+          {task.assigned_to && (
+            <div>Assigned to: {task.assigned_to}</div>
+          )}
+          {task.due_date && (
+            <div>Due: {new Date(task.due_date).toLocaleDateString()}</div>
+          )}
         </div>
       </div>
     </div>
