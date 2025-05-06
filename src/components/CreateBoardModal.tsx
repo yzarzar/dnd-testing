@@ -34,7 +34,7 @@ export default function CreateBoardModal({
       } else {
         setError('Failed to create board. Please try again.');
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);

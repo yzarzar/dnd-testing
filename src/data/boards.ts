@@ -143,4 +143,25 @@ export async function updateTaskPosition(taskId: number, columnId: number, posit
     console.error('Error updating task position:', error);
     return false;
   }
+}
+
+export async function createColumn(boardId: number, title: string): Promise<Column | null> {
+  try {
+    const response = await fetch(`http://localhost:8000/api/boards/${boardId}/columns`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title }),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to create column for board ${boardId}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`Error creating column for board ${boardId}:`, error);
+    return null;
+  }
 } 

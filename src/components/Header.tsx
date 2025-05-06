@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Image from 'next/image';
 import CreateBoardModal from './CreateBoardModal';
 
 export default function Header(): React.ReactElement {
@@ -6,8 +7,9 @@ export default function Header(): React.ReactElement {
 
   const handleBoardCreated = () => {
     // Call the global refresh function if it exists
-    if (typeof window !== 'undefined' && (window as any).refreshBoards) {
-      (window as any).refreshBoards();
+    const customWindow = window as Window & { refreshBoards?: () => void };
+    if (typeof window !== 'undefined' && customWindow.refreshBoards) {
+      customWindow.refreshBoards();
     }
   };
 
@@ -33,10 +35,12 @@ export default function Header(): React.ReactElement {
               <span>New Board</span>
             </button>
             <div className="flex items-center ml-2">
-              <img
+              <Image
                 className="h-8 w-8 rounded-full"
                 src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
                 alt="User avatar"
+                width={32}
+                height={32}
               />
             </div>
           </div>

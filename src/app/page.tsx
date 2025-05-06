@@ -15,7 +15,7 @@ export default function Home() {
   // Pass the handleBoardCreated to Header via context or props
   // For simplicity, we're using a global window function here
   if (typeof window !== 'undefined') {
-    (window as any).refreshBoards = handleBoardCreated;
+    (window as Window & { refreshBoards?: () => void }).refreshBoards = handleBoardCreated;
   }
 
   return (

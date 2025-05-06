@@ -2,12 +2,12 @@
 
 import React from 'react';
 import { useParams } from 'next/navigation';
-import KanbanBoard from '@/components/KanbanBoard';
+import { KanbanProvider, KanbanBoard } from '@/components/kanban';
 import Header from '@/components/Header';
 
 export default function BoardPage() {
   const params = useParams();
-  const boardId = params.id;
+  const boardId = params.id as string;
   
   console.log('BoardPage rendering with boardId:', boardId);
   
@@ -15,7 +15,9 @@ export default function BoardPage() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-1">
-        <KanbanBoard />
+        <KanbanProvider boardId={boardId}>
+          <KanbanBoard />
+        </KanbanProvider>
       </main>
     </div>
   );
