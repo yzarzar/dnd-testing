@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { fetchBoardDetails, BoardDetails, Column, Task, updateColumnPosition, updateTaskPosition, createColumn } from '../../../data/boards';
+import { fetchBoardDetails, BoardDetails, Column, Task, updateColumnPosition, updateTaskPosition, createColumn, createTask, CreateTaskPayload } from '../../../data/boards';
 
 // Define the toast message interface
 export interface ToastMessage {
@@ -32,6 +32,7 @@ interface KanbanContextType {
   updateColumnPositionWithFeedback: (columnId: number, newPosition: number) => Promise<void>;
   updateTaskPositionWithFeedback: (taskId: number, columnId: number, position: number) => Promise<void>;
   createColumnWithFeedback: (title: string) => Promise<void>;
+  createTaskWithFeedback: (columnId: number, taskData: CreateTaskPayload) => Promise<void>;
 }
 
 // Create the context with a default value
@@ -198,6 +199,41 @@ export const KanbanProvider: React.FC<{ children: ReactNode; boardId: string }> 
       ]);
     }
   };
+  
+  // Function to create a new task with feedback
+  const createTaskWithFeedback = async (columnId: number, taskData: CreateTaskPayload) => {
+    try {
+      const newTask = await createTask(columnId, taskData);
+      
+      if (!newTask) {
+        throw new Error('Failed to create task');
+      }
+      
+      // Add toast notification for success
+      setToasts(prevToasts => [
+        ...prevToasts,
+        {
+          id: `success-${Date.now()}`,
+          type: 'success',
+          message: 'Task created successfully!'
+        }
+      ]);
+      
+      // Refresh board to get the updated tasks
+      refreshBoard();
+    } catch (error) {
+      console.error('Failed to create task:', error);
+      // Add toast notification for error
+      setToasts(prevToasts => [
+        ...prevToasts,
+        {
+          id: `error-${Date.now()}`,
+          type: 'error',
+          message: 'Failed to create task. Please try again.'
+        }
+      ]);
+    }
+  };
 
   // Create the context value object
   const contextValue: KanbanContextType = {
@@ -222,7 +258,8 @@ export const KanbanProvider: React.FC<{ children: ReactNode; boardId: string }> 
     simulateApiDelay,
     updateColumnPositionWithFeedback,
     updateTaskPositionWithFeedback,
-    createColumnWithFeedback
+    createColumnWithFeedback,
+    createTaskWithFeedback
   };
 
   return (

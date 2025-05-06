@@ -164,4 +164,35 @@ export async function createColumn(boardId: number, title: string): Promise<Colu
     console.error(`Error creating column for board ${boardId}:`, error);
     return null;
   }
-} 
+}
+
+export interface CreateTaskPayload {
+  title: string;
+  description: string;
+  tag: string;
+  due_date: string;
+  assigned_to: string;
+  priority: string;
+  status: string;
+}
+
+export async function createTask(columnId: number, taskData: CreateTaskPayload): Promise<Task | null> {
+  try {
+    const response = await fetch(`http://localhost:8000/api/columns/${columnId}/tasks`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(taskData),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to create task for column ${columnId}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`Error creating task for column ${columnId}:`, error);
+    return null;
+  }
+}

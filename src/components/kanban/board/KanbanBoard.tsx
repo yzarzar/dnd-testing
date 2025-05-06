@@ -12,7 +12,6 @@ import { Column } from '../column/Column';
 import { TaskCard } from '../task/TaskCard';
 import { LoadingSpinner } from '../board/LoadingSpinner';
 import { ErrorDisplay } from '../board/ErrorDisplay';
-import { ToastNotifications } from '../ui/ToastNotifications';
 import { CreateColumnModal } from '../column/CreateColumnModal';
 
 export const KanbanBoard: React.FC = () => {
@@ -115,9 +114,7 @@ export const KanbanBoard: React.FC = () => {
           ) : null}
         </DragOverlay>
       </DndContext>
-      
-      <ToastNotifications />
-      
+            
       {/* Create Column Modal */}
       <CreateColumnModal 
         isOpen={isCreateColumnModalOpen}

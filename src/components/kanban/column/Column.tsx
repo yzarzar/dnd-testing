@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { 
   SortableContext, 
@@ -8,6 +8,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { Column as ColumnType, Task } from '../../../data/boards';
 import { TaskCard } from '../task/TaskCard';
+import { CreateTaskModal } from '../task/CreateTaskModal';
 
 // Add keyframes animation styles
 const shimmerAnimation = `
@@ -40,6 +41,7 @@ export const Column: React.FC<ColumnProps> = ({
   isUpdating = false, 
   updatingTaskId = null 
 }) => {
+  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   // Set up sortable for the column
   const {
     attributes,
@@ -77,7 +79,7 @@ export const Column: React.FC<ColumnProps> = ({
       <div 
         ref={setColumnNodeRef}
         style={style}
-        className={`flex flex-col w-full min-w-[300px] max-w-[350px] h-full bg-white rounded-md shadow-md border-t border-l border-r border-gray-200 ${isUpdating ? 'ring-1 ring-blue-300' : ''}`}
+        className={`flex flex-col w-full min-w-[300px] max-w-[350px] h-full bg-white rounded-xs shadow-md hover:shadow-lg border border-gray-200/50 hover:border-gray-300/50 transition-all duration-200 ${isUpdating ? 'ring-2 ring-blue-400/50' : ''} overflow-hidden`}
         {...attributes}
       >
         {/* Column Header - Modern table-like header */}
@@ -158,8 +160,28 @@ export const Column: React.FC<ColumnProps> = ({
               </div>
             )}
           </SortableContext>
+          
+          {/* Add Task Button */}
+          <div className="mt-3 flex justify-center">
+            <button 
+              onClick={() => setIsAddTaskModalOpen(true)}
+              className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors w-full justify-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Task
+            </button>
+          </div>
         </div>
       </div>
+      
+      {/* Create Task Modal */}
+      <CreateTaskModal 
+        isOpen={isAddTaskModalOpen} 
+        onClose={() => setIsAddTaskModalOpen(false)} 
+        columnId={column.id} 
+      />
     </>
   );
 };

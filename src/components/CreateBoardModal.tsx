@@ -57,7 +57,7 @@ export default function CreateBoardModal({
             )}
             
             <div className="mb-4">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-800 mb-1">
                 Board Name
               </label>
               <input
@@ -65,21 +65,21 @@ export default function CreateBoardModal({
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
                 placeholder="My Project Board"
                 required
               />
             </div>
             
             <div className="mb-2">
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="description" className="block text-sm font-medium text-gray-800 mb-1">
                 Description
               </label>
               <textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500"
                 placeholder="Describe your board purpose"
                 rows={3}
               />
@@ -108,4 +108,4 @@ export default function CreateBoardModal({
       </div>
     </div>
   );
-} 
+}
